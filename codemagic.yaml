@@ -16,7 +16,6 @@ workflows:
       - name: Hard Reset Project Structure
         script: |
           gem install xcodeproj
-          # Removes the Widget and fixes the 'No such file' and GUID errors
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
           if app_target; \
@@ -28,7 +27,6 @@ workflows:
       - name: Build and Archive
         script: |
           xcode-project use-profiles
-          # Archive using Apple Distribution and your specific Team ID
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme "GlucoseDirectApp" \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
@@ -40,14 +38,12 @@ workflows:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGN_STYLE=Manual
           
-          # Generate the IPA for export
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
     publishing:
       app_store_connect:
         auth: integration
-        app_id: 6757973021
         submit_to_testflight: true
     artifacts:
       - build/ios/ipa/*.ipa
