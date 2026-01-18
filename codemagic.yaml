@@ -18,10 +18,9 @@ workflows:
           pod install --repo-update
       - name: Generate Export Options and Build
         script: |
-          # Links profiles and generates /Users/builder/export_options.plist
           xcode-project use-profiles
           
-          # 2026 Fix: We specify only the main app target to bypass the widget error
+          # Focus strictly on the main app scheme to ignore the widget errors
           xcode-project build-ipa \
             --workspace "GlucoseDirect.xcworkspace" \
             --scheme "GlucoseDirectApp"
