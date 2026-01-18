@@ -9,14 +9,13 @@ workflows:
       xcode: latest
       ios_signing:
         provisioning_profiles:
-          - glucose_testflight  # This must be your new App Store profile
+          - glucose_testflight
         certificates:
-          - glucose_cert
+          - glucose_dist_cert
     scripts:
       - name: Hard Reset Project Structure
         script: |
           gem install xcodeproj
-          # This is your EXACT working script that fixed the 'No such file' error
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
           if app_target; \
@@ -28,7 +27,6 @@ workflows:
       - name: Build App
         script: |
           xcode-project use-profiles
-          # Using the standard archive command for Xcode 26.2
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme "GlucoseDirectApp" \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
@@ -36,7 +34,10 @@ workflows:
             archive \
             -allowProvisioningUpdates \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            DEVELOPMENT_TEAM=28962GZ9UY
+            DEVELOPMENT_TEAM=28962GZ9UY \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_STYLE=Manual \
+            OTHER_CODE_SIGN_FLAGS="--keychain $CM_KEYCHAIN_PATH"
           
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
@@ -44,6 +45,6 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true  # Automatically uploads to TestFlight
+        submit_to_testflight: true
     artifacts:
       - build/ios/ipa/*.ipa
