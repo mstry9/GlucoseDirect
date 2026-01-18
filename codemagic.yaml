@@ -1,6 +1,6 @@
 workflows:
   ios-build:
-    name: Glucose Direct Build
+    name: Glucose Direct TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
@@ -9,14 +9,14 @@ workflows:
       xcode: latest
       ios_signing:
         provisioning_profiles:
-          - glucose_profile
+          - glucose_testflight  # This must be your new App Store profile
         certificates:
           - glucose_cert
     scripts:
       - name: Hard Reset Project Structure
         script: |
           gem install xcodeproj
-          # 2026 Fix: Corrected 'symbol_path' and targeted 'Embed App Extensions' phase removal
+          # This is your EXACT working script that fixed the 'No such file' error
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
           if app_target; \
@@ -28,8 +28,9 @@ workflows:
       - name: Build App
         script: |
           xcode-project use-profiles
+          # Using the standard archive command for Xcode 26.2
           xcodebuild -project GlucoseDirect.xcodeproj \
-            -scheme GlucoseDirectApp \
+            -scheme "GlucoseDirectApp" \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
             -destination 'generic/platform=iOS' \
             archive \
@@ -40,5 +41,9 @@ workflows:
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true  # Automatically uploads to TestFlight
     artifacts:
       - build/ios/ipa/*.ipa
