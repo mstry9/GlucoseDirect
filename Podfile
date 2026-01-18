@@ -1,8 +1,13 @@
-platform :ios, '15.0'
+platform :ios, '16.0'
 
-target 'GlucoseDirect' do
+# Corrected target name for the main app
+target 'GlucoseDirectApp' do
   use_frameworks!
+  pod 'SwiftyUserDefaults'
+end
 
-  # Core dependencies
+# Corrected target name for the widget
+target 'GlucoseDirectWidget' do
+  use_frameworks!
   pod 'SwiftyUserDefaults'
 end
