@@ -11,11 +11,11 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # Create fresh certificate
-          app-store-connect certificates create --type DEVELOPMENT --save
-          # Fetch/Create profile using the exact type from your error log
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
-          keychain add-certificates
+          # This will now succeed because you cleared your certificate slots
+          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "codemagic"
+          # This fetches the profile for your registered iPhone
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "codemagic"
+          keychain add-certificates --p12-password "codemagic"
       - name: Install Pods
         script: |
           pod install
