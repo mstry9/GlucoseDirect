@@ -13,23 +13,28 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Strip CocoaPods and Widget
+      - name: Hard Reset Project File
         script: |
           gem install xcodeproj
-          # This Ruby script aggressively removes the Widget AND all CocoaPods traces from the project file
+          # This script removes the Widget, Pods scripts, and Pods framework links
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
-          project.targets.each { |t| t.build_phases.delete_if { |p| p.display_name.include?('Pods') } }; \
+          project.targets.each { |t| \
+            t.build_phases.delete_if { |p| p.display_name.include?('Pods') }; \
+            t.frameworks_build_phase.files.delete_if { |f| f.display_name.include?('Pods') || f.display_name.include?('Frameworks') }; \
+            t.build_configurations.each { |config| \
+              config.build_settings.delete('LIBRARY_SEARCH_PATHS'); \
+              config.build_settings.delete('OTHER_LDFLAGS') \
+            } \
+          }; \
           widget = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; \
           widget.remove_from_project if widget; \
-          project.frameworks_group.children.delete_if { |c| c.name.include?('Pods') || c.path.include?('Pods') }; \
           project.save"
-          # Physically remove the Pod files so the compiler can't see them
-          rm -rf Pods
-          rm -f Podfile Podfile.lock GlucoseDirect.xcworkspace
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          # Build using the PROJECT file only, skipping all workspace/pod logic
+          # Clean build to ensure no stale data remains
+          xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
+          # Final Archive attempt
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
