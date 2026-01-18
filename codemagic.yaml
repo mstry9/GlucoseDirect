@@ -1,20 +1,28 @@
 workflows:
   ios-build:
     name: Glucose Direct Build
+    max_build_duration: 120
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Codemagic
     environment:
+      groups:
+        - glucose_vars
       xcode: latest
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.mstry9.GlucoseDirect
     scripts:
-      - name: Install Dependencies
+      - name: Initialize Keychain and Signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_DEVELOPMENT --create
+          keychain add-certificates
+      - name: Install Pods
         script: |
           pod install
-      - name: Build App
+      - name: Build IPA
         script: |
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
-            --scheme "GlucoseDirect"
+            --scheme "GlucoseDirect" \
+            --bundle-id "$BUNDLE_ID"
     artifacts:
       - build/ios/ipa/*.ipa
