@@ -16,17 +16,15 @@ workflows:
       - name: Strip Widget and Pod References
         script: |
           gem install xcodeproj
-          # Aggressively remove the Widget and any Pod traces from the project file
+          # Corrected Ruby script for 2026: removes Widget target and cleans up Pod phases
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
+          project.targets.each { |t| t.build_phases.delete_if { |p| p.display_name.include?('Pods') } }; \
           project.targets.delete_if { |t| t.name.include?('Widget') || t.name.include?('Pods') }; \
-          project.build_phases.delete_if { |p| p.display_name.include?('Pods') }; \
           project.save"
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          # Clean build to clear cached errors
           xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
-          # Explicitly disable code signing for the archive step to avoid profile mismatches
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
