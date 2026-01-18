@@ -7,26 +7,23 @@ workflows:
       app_store_connect: Codemagic
     environment:
       xcode: latest
-      groups:
-        - glucose_vars
     scripts:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # 1. Create a fresh certificate (requires an empty slot in Apple Dev Portal)
+          # Create fresh certificate
           app-store-connect certificates create --type DEVELOPMENT --save
-          # 2. Corrected 2026 profile type: IOS_APP_DEVELOPMENT
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_DEVELOPMENT --create
+          # Fetch/Create profile using the exact type from your error log
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
           keychain add-certificates
       - name: Install Pods
         script: |
           pod install
-      - name: Build IPA
+      - name: Build App
         script: |
-          # Builds the final app file
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirect" \
-            --bundle-id "$BUNDLE_ID"
+            --bundle-id "com.mstry9.GlucoseDirect"
     artifacts:
       - build/ios/ipa/*.ipa
