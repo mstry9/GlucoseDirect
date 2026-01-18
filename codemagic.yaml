@@ -13,18 +13,23 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Clean Project Targets
+      - name: Strip CocoaPods and Widget
         script: |
           gem install xcodeproj
-          # 1. Remove Widget 2. Remove broken Pods script phases that cause the XCFileList error
-          ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; target.build_phases.delete_if { |p| p.display_name.include?('Embed Pods Frameworks') || p.display_name.include?('Copy Pods Resources') }; widget = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; widget.remove_from_project if widget; project.save"
-      - name: Install Pods
-        script: |
-          pod install --repo-update
+          # This Ruby script aggressively removes the Widget AND all CocoaPods traces from the project file
+          ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
+          project.targets.each { |t| t.build_phases.delete_if { |p| p.display_name.include?('Pods') } }; \
+          widget = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; \
+          widget.remove_from_project if widget; \
+          project.frameworks_group.children.delete_if { |c| c.name.include?('Pods') || c.path.include?('Pods') }; \
+          project.save"
+          # Physically remove the Pod files so the compiler can't see them
+          rm -rf Pods
+          rm -f Podfile Podfile.lock GlucoseDirect.xcworkspace
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          # We use the Project file directly now to bypass the Workspace path issues
+          # Build using the PROJECT file only, skipping all workspace/pod logic
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
