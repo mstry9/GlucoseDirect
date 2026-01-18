@@ -15,13 +15,19 @@ workflows:
     scripts:
       - name: Remove Widget Dependency
         script: |
-          # Install tool to modify project file
           gem install xcodeproj
-          # Ruby script to delete the Widget target so it doesn't block the build
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); target = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; target.remove_from_project if target; project.save"
       - name: Install Pods
         script: |
+          # Clean old pod files if any
+          rm -rf Pods
+          rm -rf GlucoseDirect.xcworkspace
           pod install --repo-update
+      - name: Fix Pods Frameworks Paths
+        script: |
+          # This specifically fixes the 'Unable to load contents of file list' error
+          sed -i '' 's/${PODS_ROOT}\/Target Support Files\/Pods-GlucoseDirectApp\/Pods-GlucoseDirectApp-frameworks-Release-input-files.xcfilelist/Target Support Files\/Pods-GlucoseDirectApp\/Pods-GlucoseDirectApp-frameworks-Release-input-files.xcfilelist/g' GlucoseDirect.xcodeproj/project.pbxproj
+          sed -i '' 's/${PODS_ROOT}\/Target Support Files\/Pods-GlucoseDirectApp\/Pods-GlucoseDirectApp-frameworks-Release-output-files.xcfilelist/Target Support Files\/Pods-GlucoseDirectApp\/Pods-GlucoseDirectApp-frameworks-Release-output-files.xcfilelist/g' GlucoseDirect.xcodeproj/project.pbxproj
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
