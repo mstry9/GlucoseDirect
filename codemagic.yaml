@@ -5,7 +5,6 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       xcode: latest
-      # These refer to the 'Reference Names' you just set in the Codemagic UI
       ios_signing:
         provisioning_profiles:
           - glucose_profile
@@ -17,9 +16,9 @@ workflows:
           pod install --repo-update
       - name: Build App
         script: |
-          # Compiles the app for your registered iPhones (PawPawMaxPhone and PawPawPhone)
+          # We use the workspace (.xcworkspace) which is created by CocoaPods
           xcode-project build-ipa \
-            --project "GlucoseDirect.xcodeproj" \
-            --scheme "GlucoseDirect"
+            --workspace "GlucoseDirect.xcworkspace" \
+            --scheme "GlucoseDirectApp"
     artifacts:
       - build/ios/ipa/*.ipa
