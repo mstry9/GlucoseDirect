@@ -13,26 +13,23 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Strip Widget and Clean
+      - name: Surgical Widget Removal
         script: |
           gem install xcodeproj
-          # This version also clears any old App Group references that can cause Code 65
+          # Advanced 2026 Script: Removes Widget and cleans up all main app references
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
-          app_target.build_configurations.each { |c| c.build_settings.delete('DEVELOPMENT_TEAM') }; \
+          # 1. Clear Target Dependencies \
+          app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; \
+          # 2. Clear Build Phases (Embed App Extensions) \
+          app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; \
+          # 3. Physically delete the Widget target \
           project.targets.delete_if { |t| t.name.include?('Widget') }; \
           project.save"
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          # 2026 Fix: Add -allowProvisioningUpdates to help Xcode 26 sync
-          xcodebuild -project GlucoseDirect.xcodeproj \
-            -scheme GlucoseDirectApp \
-            -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
-            archive \
-            -allowProvisioningUpdates \
-            COMPILER_INDEX_STORE_ENABLE=NO
-          # Export the IPA from the archive
+          xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
