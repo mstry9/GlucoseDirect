@@ -16,19 +16,18 @@ workflows:
       - name: Hard Reset Project Structure
         script: |
           gem install xcodeproj
-          # 2026 Fix: Specifically removes the 'Copy Files' phase for the deleted widget
+          # 2026 Fix: Corrected 'symbol_path' and targeted 'Embed App Extensions' phase removal
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
           if app_target; \
-            app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; \
-            app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') || (p.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase) && p.symbolic_path == :plugins) }; \
+            app_target.dependencies.delete_if { |d| d.display_name.include?('Widget') }; \
+            app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') || (p.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase) && p.dst_subfolder_spec == '13') }; \
           end; \
           project.targets.delete_if { |t| t.name.include?('Widget') }; \
           project.save"
       - name: Build App
         script: |
           xcode-project use-profiles
-          # Using the standard archive command for Xcode 26
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme GlucoseDirectApp \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
