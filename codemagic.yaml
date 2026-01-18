@@ -11,9 +11,9 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # This will now succeed because you cleared your certificate slots
+          # Creates the fresh certificate and private key
           app-store-connect certificates create --type DEVELOPMENT --save --p12-password "codemagic"
-          # This fetches the profile for your registered iPhone
+          # Generates the profile for your registered iPhones
           app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "codemagic"
           keychain add-certificates --p12-password "codemagic"
       - name: Install Pods
