@@ -13,15 +13,13 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Strip Widget and App Groups
+      - name: Surgical Project Cleanup
         script: |
           gem install xcodeproj
-          # 2026 Fix: Removes Widget, cleans dependencies, and wipes App Group requirements
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; widget_target = project.targets.find { |t| t.name.include?('Widget') }; if app_target && widget_target; app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; end; project.targets.delete_if { |t| t.name.include?('Widget') }; app_target.build_configurations.each { |config| config.build_settings.delete('DEVELOPMENT_TEAM'); config.build_settings['CODE_SIGN_STYLE'] = 'Manual' }; project.save"
-      - name: Generate Export Options and Build
+      - name: Build App
         script: |
           xcode-project use-profiles
-          # Use the -destination flag to force a generic iOS device build
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme GlucoseDirectApp \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
@@ -29,8 +27,6 @@ workflows:
             archive \
             COMPILER_INDEX_STORE_ENABLE=NO \
             DEVELOPMENT_TEAM=28962GZ9UY
-          
-          # Final IPA export
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
