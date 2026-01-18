@@ -11,10 +11,10 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # 2026 Syntax: Ensure a certificate exists first
-          app-store-connect certificates create --type IOS_APP_DEVELOPMENT
-          # Then fetch/create the profile
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
+          # Corrected 2026 Type: IOS_DEVELOPMENT
+          app-store-connect certificates create --type IOS_DEVELOPMENT
+          # Corrected 2026 Fetch Type: development
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type development --create
           keychain add-certificates
       - name: Install Pods
         script: |
