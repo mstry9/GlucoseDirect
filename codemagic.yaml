@@ -13,14 +13,18 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
+      - name: Remove Widget Dependency
+        script: |
+          # Install tool to modify project file
+          gem install xcodeproj
+          # Ruby script to delete the Widget target so it doesn't block the build
+          ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); target = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; target.remove_from_project if target; project.save"
       - name: Install Pods
         script: |
           pod install --repo-update
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          
-          # Focus strictly on the main app scheme to ignore the widget errors
           xcode-project build-ipa \
             --workspace "GlucoseDirect.xcworkspace" \
             --scheme "GlucoseDirectApp"
