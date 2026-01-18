@@ -16,20 +16,25 @@ workflows:
       - name: Surgical Widget Removal
         script: |
           gem install xcodeproj
-          # Advanced 2026 Script: Removes Widget and cleans up all main app references
+          # 2026 Script: Removes widget and scrubs it from the main app's dependencies
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
-          app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
-          # 1. Clear Target Dependencies \
-          app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; \
-          # 2. Clear Build Phases (Embed App Extensions) \
-          app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; \
-          # 3. Physically delete the Widget target \
+          main_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
+          widget_target = project.targets.find { |t| t.name.include?('Widget') }; \
+          if main_target && widget_target; \
+            # 1. Remove from Target Dependencies
+            main_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; \
+            # 2. Remove from 'Embed App Extensions' build phase
+            main_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; \
+          end; \
+          # 3. Physically delete the widget target itself
           project.targets.delete_if { |t| t.name.include?('Widget') }; \
           project.save"
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
+          # Clean build to ensure no stale cached widget data remains
           xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
+          # Final archive command
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
