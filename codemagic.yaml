@@ -17,13 +17,7 @@ workflows:
           keychain add-certificates --p12-password "codemagic"
       - name: Install Pods
         script: |
-          # Only run if Podfile exists to avoid another crash
-          if [ -f "Podfile" ]; then
-            pod install
-          else
-            echo "Podfile still not found in root. Check your GitHub files."
-            exit 1
-          fi
+          pod install --repo-update
       - name: Build App
         script: |
           xcode-project build-ipa \
