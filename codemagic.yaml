@@ -13,12 +13,17 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Strip Widget and Pod References
+      - name: Strip Widget and Clean Dependencies
         script: |
           gem install xcodeproj
-          # Corrected Ruby script for 2026: removes Widget target and cleans up Pod phases
+          # 2026 Script: Removes the widget and fixes the 'missing target GUID' error
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
-          project.targets.each { |t| t.build_phases.delete_if { |p| p.display_name.include?('Pods') } }; \
+          app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
+          widget_target = project.targets.find { |t| t.name.include?('Widget') }; \
+          if app_target && widget_target; \
+            app_target.dependencies.delete_if { |d| d.target.name.include?('Widget') }; \
+            app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; \
+          end; \
           project.targets.delete_if { |t| t.name.include?('Widget') || t.name.include?('Pods') }; \
           project.save"
       - name: Generate Export Options and Build
