@@ -46,6 +46,7 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
+        app_id: 6757973021
         submit_to_testflight: true
     artifacts:
       - build/ios/ipa/*.ipa
