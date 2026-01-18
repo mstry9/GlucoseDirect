@@ -11,14 +11,14 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # Set the password variable for the session
-          export CM_CERTIFICATE_PASSWORD="codemagic"
-          # Create the certificate
-          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "$CM_CERTIFICATE_PASSWORD"
+          # Create a directory to store the certificate
+          mkdir -p ~/Library/MobileDevice/Certificates
+          # Create certificate and force save it to the new directory
+          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "codemagic" --p12-path ~/Library/MobileDevice/Certificates/certificate.p12
           # Fetch the profile
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "$CM_CERTIFICATE_PASSWORD"
-          # Add to keychain using the new 2026 path syntax
-          keychain add-certificates
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "codemagic"
+          # Import the certificate into the keychain
+          keychain add-certificates --p12-password "codemagic"
       - name: Install Pods
         script: |
           pod install
