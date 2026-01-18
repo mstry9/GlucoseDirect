@@ -3,6 +3,8 @@ workflows:
     name: Glucose Direct Build
     max_build_duration: 120
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Codemagic
     environment:
       xcode: latest
       ios_signing:
@@ -16,12 +18,12 @@ workflows:
           pod install --repo-update
       - name: Generate Export Options and Build
         script: |
-          # This command generates the missing /Users/builder/export_options.plist
           xcode-project use-profiles
           
-          # This builds the final .ipa using the workspace created by Pods
+          # 2026 Fix: We specify the target 'GlucoseDirectApp' to ignore the Widget error
           xcode-project build-ipa \
             --workspace "GlucoseDirect.xcworkspace" \
-            --scheme "GlucoseDirectApp"
+            --scheme "GlucoseDirectApp" \
+            --bundle-id "com.mstry9.GlucoseDirect"
     artifacts:
       - build/ios/ipa/*.ipa
