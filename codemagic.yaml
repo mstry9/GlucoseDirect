@@ -7,23 +7,19 @@ workflows:
       app_store_connect: Codemagic
     environment:
       xcode: latest
+      groups:
+        - glucose_vars
     scripts:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # Set the password in the environment for the 2026 CLI
-          export CM_CERTIFICATE_PASSWORD="codemagic"
           
-          # 1. Create Certificate (Force save to a specific path)
-          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "$CM_CERTIFICATE_PASSWORD"
+          # This uses your manual CERTIFICATE_PRIVATE_KEY from environment variables
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
           
-          # 2. Fetch Profile
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "$CM_CERTIFICATE_PASSWORD"
-          
-          # 3. Link Profiles
+          # This links the fetched profiles to your project so the build doesn't fail
           xcode-project use-profiles
           
-          # 4. Add certificates (The password is picked up from the export above)
           keychain add-certificates
       - name: Install Pods
         script: |
