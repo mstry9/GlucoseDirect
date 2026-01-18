@@ -11,8 +11,8 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # We are typing the ID directly here to prevent the "empty value" error
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
+          # Added --generate-certificate to create the missing private key
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --generate-certificate
           keychain add-certificates
       - name: Install Pods
         script: |
