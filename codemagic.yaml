@@ -7,23 +7,23 @@ workflows:
       app_store_connect: Codemagic
     environment:
       xcode: latest
-      groups:
-        - glucose_vars
     scripts:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          
-          # This uses your manual CERTIFICATE_PRIVATE_KEY from environment variables
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
-          
-          # This links the fetched profiles to your project so the build doesn't fail
+          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "codemagic"
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "codemagic"
           xcode-project use-profiles
-          
-          keychain add-certificates
+          keychain add-certificates --p12-password "codemagic"
       - name: Install Pods
         script: |
-          pod install
+          # Only run if Podfile exists to avoid another crash
+          if [ -f "Podfile" ]; then
+            pod install
+          else
+            echo "Podfile still not found in root. Check your GitHub files."
+            exit 1
+          fi
       - name: Build App
         script: |
           xcode-project build-ipa \
