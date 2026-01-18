@@ -7,21 +7,26 @@ workflows:
       app_store_connect: Codemagic
     environment:
       xcode: latest
+      groups:
+        - glucose_vars
     scripts:
       - name: Initialize Keychain and Signing
-  script: |
-    keychain initialize
-    app-store-connect certificates create --type DEVELOPMENT
-    app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type development --create
-    keychain add-certificates
+        script: |
+          keychain initialize
+          # Creates the missing certificate and private key
+          app-store-connect certificates create --type DEVELOPMENT
+          # Fetches or creates the provisioning profile for your iPhone
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type development --create
+          keychain add-certificates
       - name: Install Pods
         script: |
           pod install
       - name: Build IPA
         script: |
+          # Builds the final app file
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirect" \
-            --bundle-id "com.mstry9.GlucoseDirect"
+            --bundle-id "$BUNDLE_ID"
     artifacts:
       - build/ios/ipa/*.ipa
