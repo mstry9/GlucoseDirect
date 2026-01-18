@@ -14,9 +14,12 @@ workflows:
       - name: Install Pods
         script: |
           pod install --repo-update
-      - name: Build App
+      - name: Generate Export Options and Build
         script: |
-          # We use the workspace (.xcworkspace) which is created by CocoaPods
+          # This command generates the missing /Users/builder/export_options.plist
+          xcode-project use-profiles
+          
+          # This builds the final .ipa using the workspace created by Pods
           xcode-project build-ipa \
             --workspace "GlucoseDirect.xcworkspace" \
             --scheme "GlucoseDirectApp"
