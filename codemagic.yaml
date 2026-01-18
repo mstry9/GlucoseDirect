@@ -13,28 +13,20 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Hard Reset Project File
+      - name: Strip Widget and Pod References
         script: |
           gem install xcodeproj
-          # This script removes the Widget, Pods scripts, and Pods framework links
+          # This cleans the project file of the widget and any leftover Pod references
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
-          project.targets.each { |t| \
-            t.build_phases.delete_if { |p| p.display_name.include?('Pods') }; \
-            t.frameworks_build_phase.files.delete_if { |f| f.display_name.include?('Pods') || f.display_name.include?('Frameworks') }; \
-            t.build_configurations.each { |config| \
-              config.build_settings.delete('LIBRARY_SEARCH_PATHS'); \
-              config.build_settings.delete('OTHER_LDFLAGS') \
-            } \
-          }; \
+          project.targets.each { |t| t.build_phases.delete_if { |p| p.display_name.include?('Pods') } }; \
           widget = project.targets.find { |t| t.name == 'GlucoseDirectWidget' }; \
           widget.remove_from_project if widget; \
           project.save"
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          # Clean build to ensure no stale data remains
+          # Perform a clean and build using only the project file
           xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
-          # Final Archive attempt
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
