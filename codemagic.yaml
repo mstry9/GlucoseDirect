@@ -13,10 +13,10 @@ workflows:
       - name: Initialize Keychain and Signing
         script: |
           keychain initialize
-          # Creates the missing certificate and private key
-          app-store-connect certificates create --type DEVELOPMENT
-          # Fetches or creates the provisioning profile for your iPhone
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type development --create
+          # 1. Create a fresh certificate (requires an empty slot in Apple Dev Portal)
+          app-store-connect certificates create --type DEVELOPMENT --save
+          # 2. Corrected 2026 profile type: IOS_APP_DEVELOPMENT
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_DEVELOPMENT --create
           keychain add-certificates
       - name: Install Pods
         script: |
