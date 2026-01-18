@@ -3,19 +3,21 @@ workflows:
     name: Glucose Direct Build
     max_build_duration: 120
     instance_type: mac_mini_m2
-    integrations:
-      app_store_connect: Codemagic
     environment:
       xcode: latest
+      # These refer to the 'Reference Names' you just set in the Codemagic UI
       ios_signing:
-        distribution_type: development
-        bundle_identifier: com.mstry9.GlucoseDirect
+        provisioning_profiles:
+          - glucose_profile
+        certificates:
+          - glucose_cert
     scripts:
       - name: Install Pods
         script: |
           pod install --repo-update
       - name: Build App
         script: |
+          # Compiles the app for your registered iPhones (PawPawMaxPhone and PawPawPhone)
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirect"
