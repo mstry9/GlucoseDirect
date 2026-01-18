@@ -16,6 +16,7 @@ workflows:
       - name: Hard Reset Project Structure
         script: |
           gem install xcodeproj
+          # Removes Widget target and clean up build phases for 2026 Xcode 26.2
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
           if app_target; \
@@ -27,6 +28,7 @@ workflows:
       - name: Build App
         script: |
           xcode-project use-profiles
+          # Using the Distribution Identity for TestFlight
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme "GlucoseDirectApp" \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
@@ -36,8 +38,7 @@ workflows:
             COMPILER_INDEX_STORE_ENABLE=NO \
             DEVELOPMENT_TEAM=28962GZ9UY \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            CODE_SIGN_STYLE=Manual \
-            OTHER_CODE_SIGN_FLAGS="--keychain $CM_KEYCHAIN_PATH"
+            CODE_SIGN_STYLE=Manual
           
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
