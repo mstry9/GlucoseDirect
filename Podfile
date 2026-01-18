@@ -1,12 +1,14 @@
 platform :ios, '16.0'
 
-# Corrected target name for the main app
+# Point specifically to the project file
+project 'GlucoseDirect.xcodeproj'
+
 target 'GlucoseDirectApp' do
   use_frameworks!
   pod 'SwiftyUserDefaults'
 end
 
-# Corrected target name for the widget
+# We include the widget target but it will be skipped by the build script
 target 'GlucoseDirectWidget' do
   use_frameworks!
   pod 'SwiftyUserDefaults'
