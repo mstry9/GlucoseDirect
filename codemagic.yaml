@@ -13,23 +13,26 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Strip Widget and Clean Dependencies
+      - name: Strip Widget and Clean
         script: |
           gem install xcodeproj
-          # 2026 Script: Removes the widget and fixes the 'missing target GUID' error
+          # This version also clears any old App Group references that can cause Code 65
           ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); \
           app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; \
-          widget_target = project.targets.find { |t| t.name.include?('Widget') }; \
-          if app_target && widget_target; \
-            app_target.dependencies.delete_if { |d| d.target.name.include?('Widget') }; \
-            app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; \
-          end; \
-          project.targets.delete_if { |t| t.name.include?('Widget') || t.name.include?('Pods') }; \
+          app_target.build_configurations.each { |c| c.build_settings.delete('DEVELOPMENT_TEAM') }; \
+          project.targets.delete_if { |t| t.name.include?('Widget') }; \
           project.save"
       - name: Generate Export Options and Build
         script: |
           xcode-project use-profiles
-          xcodebuild -project GlucoseDirect.xcodeproj -scheme GlucoseDirectApp clean
+          # 2026 Fix: Add -allowProvisioningUpdates to help Xcode 26 sync
+          xcodebuild -project GlucoseDirect.xcodeproj \
+            -scheme GlucoseDirectApp \
+            -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
+            archive \
+            -allowProvisioningUpdates \
+            COMPILER_INDEX_STORE_ENABLE=NO
+          # Export the IPA from the archive
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
