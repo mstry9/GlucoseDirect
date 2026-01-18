@@ -7,18 +7,15 @@ workflows:
       app_store_connect: Codemagic
     environment:
       xcode: latest
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: com.mstry9.GlucoseDirect
     scripts:
-      - name: Initialize Keychain and Signing
+      - name: Set up code signing
         script: |
           keychain initialize
-          # Create a directory to store the certificate
-          mkdir -p ~/Library/MobileDevice/Certificates
-          # Create certificate and force save it to the new directory
-          app-store-connect certificates create --type DEVELOPMENT --save --p12-password "codemagic" --p12-path ~/Library/MobileDevice/Certificates/certificate.p12
-          # Fetch the profile
-          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create --p12-password "codemagic"
-          # Import the certificate into the keychain
-          keychain add-certificates --p12-password "codemagic"
+          app-store-connect fetch-signing-files "com.mstry9.GlucoseDirect" --type IOS_APP_DEVELOPMENT --create
+          keychain add-certificates
       - name: Install Pods
         script: |
           pod install
@@ -26,7 +23,6 @@ workflows:
         script: |
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
-            --scheme "GlucoseDirect" \
-            --bundle-id "com.mstry9.GlucoseDirect"
+            --scheme "GlucoseDirect"
     artifacts:
       - build/ios/ipa/*.ipa
