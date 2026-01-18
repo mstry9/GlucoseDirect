@@ -1,0 +1,20 @@
+workflows:
+  ios-build:
+    name: Glucose Direct Build
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: com.mstry9.GlucoseDirect
+    scripts:
+      - name: Install Dependencies
+        script: |
+          pod install
+      - name: Build App
+        script: |
+          xcode-project build-ipa \
+            --project "GlucoseDirect.xcodeproj" \
+            --scheme "GlucoseDirect"
+    artifacts:
+      - build/ios/ipa/*.ipa
