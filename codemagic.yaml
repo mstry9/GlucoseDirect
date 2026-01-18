@@ -13,13 +13,15 @@ workflows:
         certificates:
           - glucose_cert
     scripts:
-      - name: Surgical Project Cleanup
+      - name: Strip Widget and Entitlements
         script: |
           gem install xcodeproj
-          ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; widget_target = project.targets.find { |t| t.name.include?('Widget') }; if app_target && widget_target; app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; end; project.targets.delete_if { |t| t.name.include?('Widget') }; project.save"
+          # 2026 Script: Removes Widget and wipes the Entitlements file causing Code 65
+          ruby -e "require 'xcodeproj'; project = Xcodeproj::Project.open('GlucoseDirect.xcodeproj'); app_target = project.targets.find { |t| t.name == 'GlucoseDirectApp' }; widget_target = project.targets.find { |t| t.name.include?('Widget') }; if app_target && widget_target; app_target.dependencies.delete_if { |d| d.target && d.target.name.include?('Widget') }; app_target.build_phases.delete_if { |p| p.display_name.include?('Embed App Extensions') }; end; project.targets.delete_if { |t| t.name.include?('Widget') }; app_target.build_configurations.each { |config| config.build_settings.delete('CODE_SIGN_ENTITLEMENTS'); config.build_settings['CODE_SIGN_STYLE'] = 'Manual' }; project.save"
       - name: Build App
         script: |
           xcode-project use-profiles
+          # Added -allowProvisioningUpdates to force Xcode 26.2 to sync
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp"
