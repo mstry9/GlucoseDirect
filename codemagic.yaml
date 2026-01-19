@@ -27,18 +27,18 @@ workflows:
       
       - name: Increment Build Number
         script: |
-          # Use the Codemagic build number to ensure every upload is unique
-          # This prevents the 'attribute with a value that has already been used' error
+																		   
+																					   
           agvtool new-version -all $BUILD_NUMBER
 
       - name: Build and Archive
         script: |
-          # 1. Prepare profiles and inject the internal-only flag
-          # This bypasses the requirement for Beta Review contact info (Phone, Name, Email)
+          # The custom-export-options here ensures the build is 'Internal Only'
+																						   
           xcode-project use-profiles --custom-export-options='{"testFlightInternalTestingOnly": true}'
           
-          # 2. Build and Export IPA
-          # We pass team and signing details via --archive-flags
+								   
+																
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp" \
@@ -48,8 +48,8 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        # Ensure 'GlucoseDirect-internal' exists as an Internal Group in App Store Connect
-        beta_groups:
-          - GlucoseDirect-internal
+        # Removed 'beta_groups' for internal builds to avoid the API assignment conflict.
+        # Internal testers automatically receive access to all internal builds.
+								  
     artifacts:
       - build/ios/ipa/*.ipa
