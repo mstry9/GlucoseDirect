@@ -27,18 +27,13 @@ workflows:
       
       - name: Increment Build Number
         script: |
-																		   
-																					   
           agvtool new-version -all $BUILD_NUMBER
 
       - name: Build and Archive
         script: |
           # The custom-export-options here ensures the build is 'Internal Only'
-																						   
           xcode-project use-profiles --custom-export-options='{"testFlightInternalTestingOnly": true}'
           
-								   
-																
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp" \
@@ -50,6 +45,5 @@ workflows:
         submit_to_testflight: true
         # Removed 'beta_groups' for internal builds to avoid the API assignment conflict.
         # Internal testers automatically receive access to all internal builds.
-								  
     artifacts:
       - build/ios/ipa/*.ipa
