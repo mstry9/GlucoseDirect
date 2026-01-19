@@ -31,7 +31,7 @@ workflows:
 
       - name: Build and Archive
         script: |
-          # The custom-export-options here ensures the build is 'Internal Only'
+          # The custom-export-options flag ensures the build is flagged for Internal Only
           xcode-project use-profiles --custom-export-options='{"testFlightInternalTestingOnly": true}'
           
           xcode-project build-ipa \
@@ -42,8 +42,8 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
-        # Removed 'beta_groups' for internal builds to avoid the API assignment conflict.
-        # Internal testers automatically receive access to all internal builds.
+        # REMOVED: submit_to_testflight: true
+        # Removing this prevents Codemagic from trying to submit for a Beta App Review
+        # Internal testers will still see the build once Apple finishes processing it
     artifacts:
       - build/ios/ipa/*.ipa
