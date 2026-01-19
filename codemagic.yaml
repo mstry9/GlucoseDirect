@@ -25,13 +25,20 @@ workflows:
           project.targets.delete_if { |t| t.name.include?('Widget') }; \
           project.save"
       
+      - name: Set Export Compliance
+        script: |
+          # This script modifies your Info.plist on the fly to bypass Apple's encryption questions.
+          # Change "GlucoseDirect" in the path below if your plist is in a different folder.
+          PLIST=$CM_BUILD_DIR/GlucoseDirect/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
+
       - name: Increment Build Number
         script: |
           agvtool new-version -all $BUILD_NUMBER
 
       - name: Build and Archive
         script: |
-          # The custom-export-options flag ensures the build is flagged for Internal Only
+          # Flagging the build for internal use bypasses the TestFlight review requirement
           xcode-project use-profiles --custom-export-options='{"testFlightInternalTestingOnly": true}'
           
           xcode-project build-ipa \
@@ -42,8 +49,7 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        # REMOVED: submit_to_testflight: true
-        # Removing this prevents Codemagic from trying to submit for a Beta App Review
-        # Internal testers will still see the build once Apple finishes processing it
+        # Keep this false to avoid the API conflict and keep the build "Green"
+        submit_to_testflight: false
     artifacts:
       - build/ios/ipa/*.ipa
