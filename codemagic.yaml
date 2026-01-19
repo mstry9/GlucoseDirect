@@ -27,6 +27,8 @@ workflows:
       - name: Build and Archive
         script: |
           xcode-project use-profiles
+          
+          # 1. Create the Archive
           xcodebuild -project GlucoseDirect.xcodeproj \
             -scheme "GlucoseDirectApp" \
             -archivePath $CM_BUILD_DIR/GlucoseDirect.xcarchive \
@@ -38,15 +40,37 @@ workflows:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGN_STYLE=Manual
           
+          # 2. Create a temporary Plist file to force Internal Testing
+          # This is the fix for the "Missing Beta Information" error
+          cat > $CM_BUILD_DIR/export_options.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>28962GZ9UY</string>
+              <key>testFlightInternalTestingOnly</key>
+              <true/>
+              <key>manageAppVersionAndBuildNumber</key>
+              <true/>
+              <key>uploadSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          # 3. Build IPA using the Plist file
           xcode-project build-ipa \
             --project "GlucoseDirect.xcodeproj" \
             --scheme "GlucoseDirectApp" \
-            --custom-export-options='{"testFlightInternalTestingOnly": true}'
+            --archive-path $CM_BUILD_DIR/GlucoseDirect.xcarchive \
+            --export-options-plist $CM_BUILD_DIR/export_options.plist
     publishing:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        # Replace the name below with your actual Internal Group name from App Store Connect
         beta_groups:
           - GlucoseDirect-internal
     artifacts:
